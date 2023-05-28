@@ -14,4 +14,21 @@ const favoriteBlog = (blogs) => {
     }
 }
 
-export default { dummy, totalLikes, favoriteBlog }
+const mostBlogs = (blogs) => {
+    if (blogs.length === 0) {
+        return {}
+    } else {
+        const authorWithBlogCounts = blogs.reduce((orderedBlog, currentBlog) => {
+            orderedBlog[currentBlog.author] = orderedBlog[currentBlog.author] + 1 || 1
+            return orderedBlog
+        }, {})
+        const authorWithMaxCount = Object.keys(authorWithBlogCounts)
+            .reduce((prevKey, currKey) =>
+                (authorWithBlogCounts[prevKey] > authorWithBlogCounts[currKey])
+                    ? prevKey
+                    : currKey)
+        return { author: authorWithMaxCount, blogs: authorWithBlogCounts[authorWithMaxCount] }
+    }
+}
+
+export default { dummy, totalLikes, favoriteBlog, mostBlogs }
