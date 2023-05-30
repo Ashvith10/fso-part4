@@ -45,12 +45,6 @@ const newBlog = {
     likes: 10,
 }
 
-const newBlogWithoutLike = {
-    title: 'First class tests',
-    author: 'Robert C. Martin',
-    url: 'http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.html',
-}
-
 beforeEach(async () => {
     await Blog.deleteMany({})
     await Blog.insertMany(initialBlogs)
@@ -83,6 +77,7 @@ test('post request creates a new blog', async () => {
 })
 
 test('if "likes" property is missing, default to zero', async () => {
+    const { likes, ...newBlogWithoutLike } = newBlog
     const response = await api
         .post('/api/blogs')
         .send(newBlogWithoutLike)
@@ -90,6 +85,36 @@ test('if "likes" property is missing, default to zero', async () => {
         .expect('Content-Type', /application\/json/)
 
     expect(response.body.likes).toBe(0)
+})
+
+describe('if "title" or "url" properties are missing, respond with code 400', () => {
+    test('if "title" is missing, respond with code 400', async () => {
+        const { title, ...newBlogWithoutTitle } = newBlog
+
+        await api
+            .post('/api/blogs')
+            .send(newBlogWithoutTitle)
+            .expect(400)
+    })
+
+
+    test('if "url" is missing, respond with code 400', async () => {
+        const { url, ...newBlogWithoutUrl } = newBlog
+
+        await api
+            .post('/api/blogs')
+            .send(newBlogWithoutUrl)
+            .expect(400)
+    })
+
+    test('if "title" and "url" are missing, respond with code 400', async () => {
+        const { url, title, ...newBlogWithoutTitleOrUrl } = newBlog
+
+        await api
+            .post('/api/blogs')
+            .send(newBlogWithoutTitleOrUrl)
+            .expect(400)
+    })
 })
 
 afterAll(async () => {

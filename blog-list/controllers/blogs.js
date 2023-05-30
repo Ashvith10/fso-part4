@@ -12,7 +12,22 @@ blogsRouter.get('/', (request, response) => {
 })
 
 blogsRouter.post('/', (request, response) => {
-    const blog = new Blog(request.body)
+    const body = request.body
+    let error = []
+
+    if (!body.title) {
+        error.push('"title" is missing')
+    }
+
+    if (!body.url) {
+        error.push('"url" is missing')
+    }
+
+    if (error.length > 0){
+        return response.status(400).json({ error: error })
+    }
+
+    const blog = new Blog(body)
 
     blog
         .save()
