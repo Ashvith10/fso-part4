@@ -36,4 +36,11 @@ blogsRouter.post('/', (request, response) => {
         })
 })
 
+blogsRouter.delete('/:id', (request, response) => {
+    Blog.deleteOne({ _id: request.params.id })
+        .then(() => {
+            response.status(204).end()
+        })
+})
+
 export default blogsRouter
