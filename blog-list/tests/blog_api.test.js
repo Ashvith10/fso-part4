@@ -148,6 +148,29 @@ describe('when there is initially some blogs saved', () => {
             expect(getResponseAfterDelete.body).not.toContainEqual(randomBlog)
         })
     })
+
+    describe('updation of a note', () => {
+        test('succeeds with a status code 200', async () => {
+            const getResponseBeforeUpdate = await api
+                .get('/api/blogs')
+
+            const randomIndex = Math.floor(Math.random()
+                * getResponseBeforeUpdate.body.length)
+            const randomBlog = getResponseBeforeUpdate.body[randomIndex]
+
+            await api
+                .put(`/api/blogs/${randomBlog.id}`)
+                .send({ ...newBlog })
+                .expect(200)
+
+            const getResponseAfterUpdate = await api
+                .get('/api/blogs')
+
+            expect(getResponseAfterUpdate.body)
+                .toHaveLength(getResponseBeforeUpdate.body.length)
+            expect(getResponseAfterUpdate.body).not.toContainEqual(randomBlog)
+        })
+    })
 })
 
 afterAll(async () => {
