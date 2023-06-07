@@ -31,4 +31,11 @@ userRouter.post('/', async (request, response, next) => {
     }
 })
 
+userRouter.get('/', async (request, response) => {
+    const users = await User
+        .find({})
+        .populate('blogs')
+    response.json(users)
+})
+
 export default userRouter

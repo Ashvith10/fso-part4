@@ -1,10 +1,13 @@
 import express from 'express'
 import Blog from '../models/blog.js'
+import User from '../models/user.js'
 
 const blogsRouter = express.Router()
 
 blogsRouter.get('/', async (request, response) => {
-    const blogs = await Blog.find({})
+    const blogs = await Blog
+        .find({})
+        .populate('user', { username: 1, name: 1, id: 1 })
     response.json(blogs)
 })
 
@@ -24,8 +27,11 @@ blogsRouter.post('/', async(request, response) => {
         return response.status(400).json({ error: error })
     }
 
-    const blog = new Blog(body)
+    const user = await User.findById(body.userId)
+    const blog = new Blog({ ...body, user: user._id })
     const newBlog = await blog.save()
+    user.blogs = user.blogs.concat(newBlog._id)
+    await user.save()
 
     response.status(201).json(newBlog)
 })
