@@ -1,8 +1,17 @@
 import express from 'express'
 import Blog from '../models/blog.js'
 import User from '../models/user.js'
+import jwt from 'jsonwebtoken'
 
 const blogsRouter = express.Router()
+
+const getTokenFrom = (request) => {
+    const authorization = request.get('authorization')
+    if (authorization && authorization.startsWith('Bearer ')) {
+        return authorization.replace('Bearer ', '')
+    }
+    return null
+}
 
 blogsRouter.get('/', async (request, response) => {
     const blogs = await Blog
@@ -11,29 +20,45 @@ blogsRouter.get('/', async (request, response) => {
     response.json(blogs)
 })
 
-blogsRouter.post('/', async(request, response) => {
+blogsRouter.post('/', async(request, response, next) => {
     const body = request.body
     let error = ''
+    let status = 0
 
-    if (!body.title && body.url) {
-        error = '"title" is missing'
-    } else if (body.title && !body.url) {
-        error ='"url" is missing'
-    } else if (!body.title && !body.url) {
-        error ='"title" and "url" is missing'
+    try {
+        if (!body.title && body.url) {
+            error = '"title" is missing'
+        } else if (body.title && !body.url) {
+            error ='"url" is missing'
+        } else if (!body.title && !body.url) {
+            error ='"title" and "url" is missing'
+        }
+
+        if (!body.title || !body.url) {
+            status = 400
+        }
+
+        const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET)
+
+        if (!decodedToken.id) {
+            error = 'Token invalid'
+            status = 401
+        }
+
+        if (error !== ''){
+            return response.status(status).json({ error: error })
+        }
+
+        const user = await User.findById(decodedToken.id)
+        const blog = new Blog({ ...body, user: user._id })
+        const newBlog = await blog.save()
+        user.blogs = user.blogs.concat(newBlog._id)
+        await user.save()
+
+        response.status(201).json(newBlog)
+    } catch (exception) {
+        next(exception)
     }
-
-    if (error !== ''){
-        return response.status(400).json({ error: error })
-    }
-
-    const user = await User.findById(body.userId)
-    const blog = new Blog({ ...body, user: user._id })
-    const newBlog = await blog.save()
-    user.blogs = user.blogs.concat(newBlog._id)
-    await user.save()
-
-    response.status(201).json(newBlog)
 })
 
 blogsRouter.delete('/:id', async (request, response, next) => {
