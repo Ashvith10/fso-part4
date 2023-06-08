@@ -23,9 +23,12 @@ mongoose.connect(config.MONGODB_URI)
 app.use(middleware.requestLogger)
 app.use(cors())
 app.use(express.json())
+app.use(middleware.tokenHandler)
+
 app.use('/api/blogs', blogsRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/login', loginRouter)
+
 app.use(middleware.errorHandler)
 
 export default app
