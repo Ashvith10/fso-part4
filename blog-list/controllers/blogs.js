@@ -1,7 +1,5 @@
 import express from 'express'
 import Blog from '../models/blog.js'
-import User from '../models/user.js'
-import jwt from 'jsonwebtoken'
 
 const blogsRouter = express.Router()
 
@@ -15,7 +13,6 @@ blogsRouter.get('/', async (request, response) => {
 blogsRouter.post('/', async(request, response, next) => {
     const body = request.body
     let error = ''
-    let status = 0
 
     try {
         if (!body.title && body.url) {
@@ -26,22 +23,11 @@ blogsRouter.post('/', async(request, response, next) => {
             error ='"title" and "url" is missing'
         }
 
-        if (!body.title || !body.url) {
-            status = 400
+        if (error !== '') {
+            return response.status(400).json({ error: error })
         }
 
-        const decodedToken = jwt.verify(request.token, process.env.SECRET)
-
-        if (!decodedToken.id) {
-            error = 'Token invalid'
-            status = 401
-        }
-
-        if (error !== ''){
-            return response.status(status).json({ error: error })
-        }
-
-        const user = await User.findById(decodedToken.id)
+        const user = request.user
         const blog = new Blog({ ...body, user: user._id })
         const newBlog = await blog.save()
         user.blogs = user.blogs.concat(newBlog._id)
@@ -55,13 +41,7 @@ blogsRouter.post('/', async(request, response, next) => {
 
 blogsRouter.delete('/:id', async (request, response, next) => {
     try {
-        const decodedToken = jwt.verify(request.token, process.env.SECRET)
-
-        if (!decodedToken.id) {
-            return response.status(401).json({ error: 'Token invalid' })
-        }
-
-        const user = await User.findById(decodedToken.id)
+        const user = request.user
         const blog = await Blog.findById(request.params.id)
 
         if (!blog) {
