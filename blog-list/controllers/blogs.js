@@ -55,8 +55,27 @@ blogsRouter.post('/', async(request, response, next) => {
 
 blogsRouter.delete('/:id', async (request, response, next) => {
     try {
-        await Blog.deleteOne({ _id: request.params.id })
-        response.status(204).end()
+        const decodedToken = jwt.verify(request.token, process.env.SECRET)
+
+        if (!decodedToken.id) {
+            return response.status(401).json({ error: 'Token invalid' })
+        }
+
+        const user = await User.findById(decodedToken.id)
+        const blog = await Blog.findById(request.params.id)
+
+        if (!blog) {
+            return response.status(404).json({ error: 'Blog does not exist' })
+        }
+
+        if (blog.user.toString() === user.id) {
+            await Blog.deleteOne({ _id: request.params.id })
+            response.status(204)
+                .json({ error: 'Blog deleted successfully' })
+        } else {
+            response.status(403)
+                .json({ error: 'You do not have the permission to delete' })
+        }
     } catch (exception) {
         next(exception)
     }
@@ -64,8 +83,9 @@ blogsRouter.delete('/:id', async (request, response, next) => {
 
 blogsRouter.put('/:id', async (request, response, next) => {
     try {
-        const updatedBlog = await Blog.findByIdAndUpdate(request.params.id,
-            { ...request.body }, { new: true })
+        const updatedBlog = await Blog
+            .findByIdAndUpdate(request.params.id,
+                { ...request.body }, { new: true })
         response.json(updatedBlog)
     } catch(exception) {
         next(exception)
