@@ -33,6 +33,6 @@ module.exports = {
         'object-curly-spacing': ['error', 'always'],
         'arrow-spacing': ['error',{ 'before': true, 'after': true }],
         'no-console': 0,
-        'no-unused-vars': ['error', { 'ignoreRestSiblings': true }]
+        'no-unused-vars': ['error', { 'args': 'none', 'ignoreRestSiblings': true }]
     }
 }

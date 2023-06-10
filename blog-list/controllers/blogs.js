@@ -1,4 +1,5 @@
 import express from 'express'
+import middleware from '../utils/middleware.js'
 import Blog from '../models/blog.js'
 
 const blogsRouter = express.Router()
@@ -10,7 +11,7 @@ blogsRouter.get('/', async (request, response) => {
     response.json(blogs)
 })
 
-blogsRouter.post('/', async(request, response, next) => {
+blogsRouter.post('/', middleware.tokenHandler, middleware.userExtractor, async(request, response, next) => {
     const body = request.body
     let error = ''
 
@@ -39,7 +40,7 @@ blogsRouter.post('/', async(request, response, next) => {
     }
 })
 
-blogsRouter.delete('/:id', async (request, response, next) => {
+blogsRouter.delete('/:id', middleware.tokenHandler, middleware.userExtractor, async (request, response, next) => {
     try {
         const user = request.user
         const blog = await Blog.findById(request.params.id)
@@ -61,7 +62,7 @@ blogsRouter.delete('/:id', async (request, response, next) => {
     }
 })
 
-blogsRouter.put('/:id', async (request, response, next) => {
+blogsRouter.put('/:id', middleware.tokenHandler, middleware.userExtractor, async (request, response, next) => {
     try {
         const updatedBlog = await Blog
             .findByIdAndUpdate(request.params.id,

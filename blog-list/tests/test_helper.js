@@ -1,3 +1,5 @@
+import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt'
 import Blog from '../models/blog.js'
 import User from '../models/user.js'
 
@@ -23,6 +25,12 @@ const newBlog = {
     likes: 10,
 }
 
+const newUser = {
+    username: 'user',
+    name: 'User',
+    password: 'password'
+}
+
 const blogsInDb = async () => {
     const blogs = await Blog.find({})
     return blogs.map(blog => blog.toJSON())
@@ -33,4 +41,26 @@ const usersInDb = async () => {
     return users.map(user => user.toJSON())
 }
 
-export default { initialBlogs, newBlog, blogsInDb, usersInDb }
+const createNewUser  = async(userDetails) => {
+    const passwordHash = await bcrypt.hash(userDetails.password, 10)
+    const user = new User({
+        username: userDetails.username,
+        name: userDetails.name,
+        passwordHash
+    })
+
+    await user.save()
+}
+
+const getUserToken = async (username) => {
+    const user = await User.findOne({
+        username: newUser.username
+    })
+
+    return jwt.sign({
+        username: user.username,
+        id:user._id
+    }, process.env.SECRET)
+}
+
+export default { initialBlogs, newBlog, newUser, blogsInDb, usersInDb, createNewUser, getUserToken }
