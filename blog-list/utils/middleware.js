@@ -5,6 +5,10 @@ import User from '../models/user.js'
 
 const requestLogger = morgan('tiny')
 
+const unknownEndpoint = (request, response) => {
+    response.status(404).json({ error: 'Unknown endpoint' })
+}
+
 const errorHandler = (error, request, response, next) => {
     logger.error(error.message)
 
@@ -44,4 +48,4 @@ const userExtractor = async (request, response, next) => {
     next()
 }
 
-export default { requestLogger, errorHandler, tokenHandler, userExtractor }
+export default { requestLogger, unknownEndpoint, errorHandler, tokenHandler, userExtractor }

@@ -31,6 +31,7 @@ blogsRouter.post('/', middleware.tokenHandler, middleware.userExtractor, async(r
         const user = request.user
         const blog = new Blog({ ...body, user: user._id })
         const newBlog = await blog.save()
+        newBlog.populate('user', { username: 1, name: 1, id: 1 })
         user.blogs = user.blogs.concat(newBlog._id)
         await user.save()
 
@@ -67,6 +68,7 @@ blogsRouter.put('/:id', middleware.tokenHandler, middleware.userExtractor, async
         const updatedBlog = await Blog
             .findByIdAndUpdate(request.params.id,
                 { ...request.body }, { new: true })
+            .populate('user', { username: 1, name: 1, id: 1 })
         response.json(updatedBlog)
     } catch(exception) {
         next(exception)

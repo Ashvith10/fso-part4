@@ -6,6 +6,7 @@ import User from '../models/user.js'
 import Blog from '../models/blog.js'
 
 const api = supertest(app)
+let token
 
 describe('when there is initially some blogs saved', () => {
     beforeEach(async () => {
@@ -24,6 +25,7 @@ describe('when there is initially some blogs saved', () => {
         })
 
         await user.save()
+        token = await helper.getUserToken(helper.newUser.username)
     })
 
     test('blogs are returned as json', async () => {
@@ -48,8 +50,6 @@ describe('when there is initially some blogs saved', () => {
 
     describe('addition of a new blog', () => {
         test('succeeds with valid data', async () => {
-            const token = await helper.getUserToken(helper.newUser.username)
-
             const postResponse = await api
                 .post('/api/blogs')
                 .set('Authorization', `Bearer ${token}`)
@@ -64,7 +64,6 @@ describe('when there is initially some blogs saved', () => {
         })
 
         test('defaults to zero if "likes" property is missing', async () => {
-            const token = await helper.getUserToken(helper.newUser.username)
             const { likes, ...newBlogWithoutLike } = helper.newBlog
 
             const response = await api
@@ -91,7 +90,6 @@ describe('when there is initially some blogs saved', () => {
 
         describe('responds with code 400', () => {
             test('if "title" is missing', async () => {
-                const token = await helper.getUserToken(helper.newUser.username)
                 const { title, ...newBlogWithoutTitle } = helper.newBlog
 
                 await api
@@ -102,7 +100,6 @@ describe('when there is initially some blogs saved', () => {
             })
 
             test('if "url" is missing', async () => {
-                const token = await helper.getUserToken(helper.newUser.username)
                 const { url, ...newBlogWithoutUrl } = helper.newBlog
 
                 await api
@@ -113,7 +110,6 @@ describe('when there is initially some blogs saved', () => {
             })
 
             test('if both "title" and "url" are missing', async () => {
-                const token = await helper.getUserToken(helper.newUser.username)
                 const { url, title, ...newBlogWithoutTitleOrUrl } = helper.newBlog
 
                 await api
@@ -127,7 +123,6 @@ describe('when there is initially some blogs saved', () => {
 
     describe('deletion of a blog', () => {
         test('succeeds with status code 204, if "id" is valid', async () => {
-            const token = await helper.getUserToken(helper.newUser.username)
             const blogsAtStart = await helper.blogsInDb()
 
             const randomIndex = Math.floor(Math.random()
@@ -146,7 +141,6 @@ describe('when there is initially some blogs saved', () => {
         })
 
         test('fails with status code 400, if "id" is invalid', async () => {
-            const token = await helper.getUserToken(helper.newUser.username)
             const blogsAtStart = await helper.blogsInDb()
 
             const randomIndex = Math.floor(Math.random()
@@ -180,7 +174,6 @@ describe('when there is initially some blogs saved', () => {
 
     describe('updation of a blog', () => {
         test('succeeds with a status code 200 if "Authorization" header is provided', async () => {
-            const token = await helper.getUserToken(helper.newUser.username)
             const blogsAtStart = await helper.blogsInDb()
 
             const randomIndex = Math.floor(Math.random()
@@ -200,7 +193,6 @@ describe('when there is initially some blogs saved', () => {
         })
 
         test('fails with a status code 400 if "id" is malformatted', async () => {
-            const token = await helper.getUserToken(helper.newUser.username)
             const blogsAtStart = await helper.blogsInDb()
 
             const randomIndex = Math.floor(Math.random()
